@@ -11,49 +11,17 @@ public class RandomCityWeatherApp {
         String randomCity = cities[new Random().nextInt(cities.length)];
 
         URL url = new URL("http://dataservice.accuweather.com/locations/v1/cities/search?apikey=" + apiKey + "&q=" + randomCity);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-        connection.setRequestMethod("GET");
-        connection.connect();
-
-        int responseCode = connection.getResponseCode();
-        String response = "";
-
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            Scanner input = new Scanner(connection.getInputStream());
-            while (input.hasNext()) {
-                response += input.nextLine();
-            }
-            input.close();
-        } else {
-            System.out.println("Error: Unable to connect to AccuWeather API.");
-        }
-        connection.disconnect();
+        String response = doHTTPGetRequest(String.valueOf(url));
 
         JSONObject location = new JSONArray(response).getJSONObject(0);
         String locationKey = location.getString("Key");
         String cityName = location.getString("EnglishName");
         url = new URL("http://dataservice.accuweather.com/currentconditions/v1/" + locationKey + "?apikey=" + apiKey);
 
-        connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        connection.connect();
-        responseCode = connection.getResponseCode();
-        response = "";
+        String response2 = doHTTPGetRequest(String.valueOf(url));
 
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            Scanner scanner = new Scanner(connection.getInputStream());
-            while (scanner.hasNext()) {
-                response += scanner.nextLine();
-            }
-            scanner.close();
-        } else {
-            System.out.println("Error: Unable to connect to AccuWeather API.");
-            return;
-        }
-        connection.disconnect();
-
-        JSONObject currentConditions = new JSONArray(response).getJSONObject(0);
+        JSONObject currentConditions = new JSONArray(response2).getJSONObject(0);
         String weatherText = currentConditions.getString("WeatherText");
         double temperature = currentConditions.getJSONObject("Temperature").getJSONObject("Metric").getDouble("Value");
         long epochTime = currentConditions.getLong("EpochTime");
@@ -61,9 +29,43 @@ public class RandomCityWeatherApp {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
         String formattedTime = sdf.format(time);
-        System.out.println("City: " + cityName);
-        System.out.println("Weather: " + weatherText);
-        System.out.println("Temperature: " + temperature + "°C");
-        System.out.println("Time: " + formattedTime);
+
+        generatedInfo(cityName, weatherText, temperature, formattedTime);
+    }
+
+    public static String doHTTPGetRequest(String url) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+
+            int responseCode = connection.getResponseCode();
+            String response = "";
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                Scanner input = new Scanner(connection.getInputStream());
+                while (input.hasNext()) {
+                    response += input.nextLine();
+                }
+                input.close();
+            } else {
+                System.out.println("Error: Unable to connect to API.");
+            }
+            connection.disconnect();
+            return response;
+        } catch (ProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void generatedInfo(String cn, String w, double t, String ft) {
+        System.out.println("City: " + cn);
+        System.out.println("Weather: " + w);
+        System.out.println("Temperature: " + t + "°C");
+        System.out.println("Time: " + ft);
     }
 }
