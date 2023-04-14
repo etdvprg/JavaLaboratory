@@ -35,9 +35,8 @@ public class RandomCityWeatherApp {
         String formattedTime = sdf.format(time);
 
         String localObservationDateTime = currentConditions.getString("LocalObservationDateTime");
-        ZonedDateTime zdt = ZonedDateTime.parse(localObservationDateTime).withZoneSameInstant(ZoneId.systemDefault());
-        String time2 = zdt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        System.out.println("Local time: " + time2);
+        String localTime = localObservationDateTime.substring(11,19);
+        System.out.println("Local time: " + localTime);
 
         generatedInfo(cityName, weatherText, temperature, formattedTime);
 
