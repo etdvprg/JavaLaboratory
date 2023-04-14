@@ -1,46 +1,83 @@
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.text.*;
+import java.awt.*;
+import javax.swing.*;
+
 public class RandomCityWeatherApp {
+    private static JButton generateBtn;
     public static void main(String[] args) throws IOException {
-        String apiKey = "pzRaENEiK4CDsS5IBItFg6BNzckGon2A";
-        String[] cities = {"Abu Dhabi", "Manila", "Bangkok", "Tokyo", "Dubai", "Beijing", "Singapore", "Riyadh", "Manama", "Muscat", "New York", "Sacramento", "London", "Moscow"};
-        String randomCity = cities[new Random().nextInt(cities.length)];
+        JFrame frame = new JFrame("Random City Weather App");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 200);
 
-        URL searchLocation = new URL("http://dataservice.accuweather.com/locations/v1/cities/search?apikey=" + apiKey + "&q=" + randomCity);
+        JPanel welcomePanel = new JPanel();
+        welcomePanel.setLayout(new BorderLayout());
 
-        String response = doHTTPGetRequest(String.valueOf(searchLocation));
+        JLabel welcomeLabel = new JLabel("Welcome to the app!");
+        welcomeLabel.setHorizontalAlignment(JLabel.CENTER);
+        welcomePanel.add(welcomeLabel, BorderLayout.CENTER);
 
-        JSONObject location = new JSONArray(response).getJSONObject(0);
-        String locationKey = location.getString("Key");
-        String cityName = location.getString("EnglishName");
+        generateBtn = new JButton("Generate Info");
+        generateBtn.addActionListener(new ActionListener() {
 
-        URL locationInfo = new URL("http://dataservice.accuweather.com/currentconditions/v1/" + locationKey + "?apikey=" + apiKey);
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String apiKey = "pzRaENEiK4CDsS5IBItFg6BNzckGon2A";
+                    String[] cities = { "Abu Dhabi", "Manila", "Bangkok", "Tokyo", "Dubai", "Beijing", "Singapore",
+                            "Riyadh", "Manama", "Muscat", "New York", "Sacramento", "London", "Moscow" };
+                    String randomCity = cities[new Random().nextInt(cities.length)];
 
-        String response2 = doHTTPGetRequest(String.valueOf(locationInfo));
-        System.out.println(response2);
+                    URL searchLocation = new URL(
+                            "http://dataservice.accuweather.com/locations/v1/cities/search?apikey=" + apiKey + "&q="
+                                    + randomCity);
 
-        JSONObject currentConditions = new JSONArray(response2).getJSONObject(0);
-        String weatherText = currentConditions.getString("WeatherText");
-        double temperature = currentConditions.getJSONObject("Temperature").getJSONObject("Metric").getDouble("Value");
-        long epochTime = currentConditions.getLong("EpochTime");
-        Date time = new Date(epochTime * 1000L);
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss z");
-        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-        String formattedTime = sdf.format(time);
+                    String response = doHTTPGetRequest(String.valueOf(searchLocation));
 
-        String localObservationDateTime = currentConditions.getString("LocalObservationDateTime");
-        String localTime = localObservationDateTime.substring(11,19);
-        System.out.println("Local time: " + localTime);
+                    JSONObject location = new JSONArray(response).getJSONObject(0);
+                    String locationKey = location.getString("Key");
+                    String cityName = location.getString("EnglishName");
 
-        generatedInfo(cityName, weatherText, temperature, formattedTime);
+                    URL locationInfo = new URL(
+                            "http://dataservice.accuweather.com/currentconditions/v1/" + locationKey + "?apikey="
+                                    + apiKey);
 
+                    String response2 = doHTTPGetRequest(String.valueOf(locationInfo));
+                    System.out.println(response2);
+
+                    JSONObject currentConditions = new JSONArray(response2).getJSONObject(0);
+                    String weatherText = currentConditions.getString("WeatherText");
+                    double temperature = currentConditions.getJSONObject("Temperature").getJSONObject("Metric")
+                            .getDouble("Value");
+                    long epochTime = currentConditions.getLong("EpochTime");
+                    Date time = new Date(epochTime * 1000L);
+                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss z");
+                    sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                    String formattedTime = sdf.format(time);
+
+                    String localObservationDateTime = currentConditions.getString("LocalObservationDateTime");
+                    String localTime = localObservationDateTime.substring(11, 19);
+                    System.out.println("Local time: " + localTime);
+
+                    generatedInfo(cityName, weatherText, temperature, formattedTime);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        welcomePanel.add(generateBtn, BorderLayout.SOUTH);
+
+        frame.getContentPane().add(welcomePanel);
+        frame.setVisible(true);
     }
+
 
     public static String doHTTPGetRequest(String url) {
         try {
