@@ -2,7 +2,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.*;
 import java.net.*;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.text.*;
@@ -34,11 +34,13 @@ public class RandomCityWeatherApp {
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
         String formattedTime = sdf.format(time);
 
-        String localObservationDateTimeS = currentConditions.getString("LocalObservationDateTime");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        OffsetDateTime localObservationDateTime = OffsetDateTime.parse(localObservationDateTimeS, formatter);
-        System.out.println(localObservationDateTime);
+        String localObservationDateTime = currentConditions.getString("LocalObservationDateTime");
+        ZonedDateTime zdt = ZonedDateTime.parse(localObservationDateTime).withZoneSameInstant(ZoneId.systemDefault());
+        String time2 = zdt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        System.out.println("Local time: " + time2);
+
         generatedInfo(cityName, weatherText, temperature, formattedTime);
+
     }
 
     public static String doHTTPGetRequest(String url) {
