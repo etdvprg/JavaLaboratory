@@ -2,6 +2,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.*;
 import java.net.*;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.text.*;
 public class RandomCityWeatherApp {
@@ -10,26 +12,32 @@ public class RandomCityWeatherApp {
         String[] cities = {"Abu Dhabi", "Manila", "Bangkok", "Tokyo", "Dubai", "Beijing", "Singapore", "Riyadh", "Manama", "Muscat", "New York", "Sacramento", "London", "Moscow"};
         String randomCity = cities[new Random().nextInt(cities.length)];
 
-        URL url = new URL("http://dataservice.accuweather.com/locations/v1/cities/search?apikey=" + apiKey + "&q=" + randomCity);
+        URL searchLocation = new URL("http://dataservice.accuweather.com/locations/v1/cities/search?apikey=" + apiKey + "&q=" + randomCity);
 
-        String response = doHTTPGetRequest(String.valueOf(url));
+        String response = doHTTPGetRequest(String.valueOf(searchLocation));
 
         JSONObject location = new JSONArray(response).getJSONObject(0);
         String locationKey = location.getString("Key");
         String cityName = location.getString("EnglishName");
-        url = new URL("http://dataservice.accuweather.com/currentconditions/v1/" + locationKey + "?apikey=" + apiKey);
 
-        String response2 = doHTTPGetRequest(String.valueOf(url));
+        URL locationInfo = new URL("http://dataservice.accuweather.com/currentconditions/v1/" + locationKey + "?apikey=" + apiKey);
+
+        String response2 = doHTTPGetRequest(String.valueOf(locationInfo));
+        System.out.println(response2);
 
         JSONObject currentConditions = new JSONArray(response2).getJSONObject(0);
         String weatherText = currentConditions.getString("WeatherText");
         double temperature = currentConditions.getJSONObject("Temperature").getJSONObject("Metric").getDouble("Value");
         long epochTime = currentConditions.getLong("EpochTime");
         Date time = new Date(epochTime * 1000L);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss z");
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
         String formattedTime = sdf.format(time);
 
+        String localObservationDateTimeS = currentConditions.getString("LocalObservationDateTime");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        OffsetDateTime localObservationDateTime = OffsetDateTime.parse(localObservationDateTimeS, formatter);
+        System.out.println(localObservationDateTime);
         generatedInfo(cityName, weatherText, temperature, formattedTime);
     }
 
@@ -66,6 +74,7 @@ public class RandomCityWeatherApp {
         System.out.println("City: " + cn);
         System.out.println("Weather: " + w);
         System.out.println("Temperature: " + t + "°C");
-        System.out.println("Time: " + ft);
+        System.out.println("Standard Time: " + ft);
+        //System.out.println("Local Time: " + lt);
     }
 }
